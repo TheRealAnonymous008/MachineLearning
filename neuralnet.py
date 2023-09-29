@@ -35,8 +35,8 @@ class NeuralNetwork(nn.Module):
 
     def forward(self, x):
         output = x 
-        
+
         for layer in self.forward_layers:
             output = layer.forward(x)
         
-        return x
+        return output
