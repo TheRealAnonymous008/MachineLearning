@@ -27,10 +27,11 @@ class NeuralNetwork(nn.Module):
 
                 if dropout: 
                     self.forward_layers.append(nn.Dropout())
-            
-            else:
-                self.forward_layers.append(nn.Sigmoid())
 
+        # Note we need this so that all the layers in the list 
+        # are registered as params. See here
+        # https://discuss.pytorch.org/t/register-layers-within-list-as-parameters/150761/4 
+        self.input_layer = self.forward_layers[0]
 
 
     def forward(self, x):
