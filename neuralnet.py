@@ -38,6 +38,6 @@ class NeuralNetwork(nn.Module):
         output = x 
 
         for layer in self.forward_layers:
-            output = layer.forward(x)
+            output = layer.forward(output)
         
         return output
