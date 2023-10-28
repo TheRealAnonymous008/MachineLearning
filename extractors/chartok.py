@@ -1,6 +1,7 @@
 import pandas as pd
 
 class CharacterTok: 
+    pad_token = " "
     def __init__(self):
         pass
     
