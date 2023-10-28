@@ -30,6 +30,7 @@ def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimiz
         # Gather data and report
         last_loss = loss.item()
 
+
     return last_loss
 
 def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataLoader, epochs = 1, learning_rate = 0.01):
@@ -53,3 +54,18 @@ def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataL
 
         avg_vloss = running_vloss / len(val_dl)
         print(f"train_loss = {train_loss :.4f}, val_loss = {avg_vloss :.4f}")
+
+def evaluate(model : torch.nn.Module, val_dl : DataLoader):
+    loss_fn = CrossEntropyLoss()
+    model.eval()
+    running_vloss = 0
+    # Disable gradient computation and reduce memory consumption.
+    with torch.no_grad():
+        for i, vdata in enumerate(val_dl):
+            vinputs, vlabels = vdata
+            voutputs = model(vinputs)
+            vloss = loss_fn(voutputs, vlabels)
+            running_vloss += vloss
+
+    avg_vloss = running_vloss / len(val_dl)
+    print(f"loss = {avg_vloss :.4f}")
