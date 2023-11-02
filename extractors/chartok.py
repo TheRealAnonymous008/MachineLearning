@@ -1,4 +1,6 @@
 import pandas as pd
+from torch.utils.data import Dataset
+import torch
 
 class CharacterTok: 
     pad_token = " "
@@ -17,3 +19,33 @@ class CharacterTok:
         token_matrix = pd.DataFrame(list(tokenized_series))
         
         return token_matrix
+
+class CharTokenDataset(Dataset):
+    def __init__(self, data, labels, tokenizer, max_seq_length, normalize = True):
+        self.data = data
+        self.labels = labels
+        self.tokenizer = tokenizer
+        self.max_seq_length = max_seq_length
+        self.normalize = normalize
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        text = self.data['text'].iloc[idx]
+        # Tokenize the text by characters
+        tokens = list(text)
+        # Pad or truncate the tokens to the specified max_seq_length
+        if len(tokens) < self.max_seq_length:
+            tokens += [" "] * (self.max_seq_length - len(tokens))
+        else:
+            tokens = tokens[:self.max_seq_length]
+        # Convert tokens to numerical representations (e.g., ASCII values).  
+        c = 1.0 
+        if self.normalize:
+            c = 255.0
+
+        token_ids = [ord(char) / c  for char in tokens]
+
+        label = self.labels.iloc[idx]  
+        return torch.tensor(token_ids, dtype=torch.float32), label

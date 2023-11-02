@@ -15,7 +15,7 @@ class NeuralNetwork(nn.Module):
         dimensions.extend(hidden_layers)
         dimensions.append(output_classes)
 
-        self.forward_layers = []
+        self.forward_layers = nn.Sequential()
 
         for x in range(1, len(dimensions)):
             self.forward_layers.append(
@@ -35,9 +35,4 @@ class NeuralNetwork(nn.Module):
 
 
     def forward(self, x):
-        output = x 
-
-        for layer in self.forward_layers:
-            output = layer.forward(output)
-        
-        return output
+        return self.input_layer(x)

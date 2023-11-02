@@ -1,7 +1,9 @@
 from torch.utils.data import TensorDataset, DataLoader
 from torch.optim import Adam, Optimizer
 from torch.nn import CrossEntropyLoss
+import torch.functional as F
 import torch
+from sklearn import metrics
 
 def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimizer, loss_fn ):
     running_loss = 0.
@@ -11,13 +13,9 @@ def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimiz
     # iter(training_loader) so that we can track the batch
     # index and do some intra-epoch reporting
     for i, data in enumerate(dl):
-        # Every data instance is an input + label pair
         inputs, labels = data
 
-        # Zero your gradients for every batch!
         optimizer.zero_grad()
-
-        # Make predictions for this batch
         outputs = model(inputs)
 
         # Compute the loss and its gradients
@@ -59,7 +57,13 @@ def evaluate(model : torch.nn.Module, val_dl : DataLoader):
     loss_fn = CrossEntropyLoss()
     model.eval()
     running_vloss = 0
+    temperature = 0.01 # Controls softmax preds
+    
     # Disable gradient computation and reduce memory consumption.
+
+    predictions = []
+    ground_truths = []
+
     with torch.no_grad():
         for i, vdata in enumerate(val_dl):
             vinputs, vlabels = vdata
@@ -67,5 +71,24 @@ def evaluate(model : torch.nn.Module, val_dl : DataLoader):
             vloss = loss_fn(voutputs, vlabels)
             running_vloss += vloss
 
+            # Use the outputs to get a decision rule via softmax. This is done to get a tangible result for 
+            # Accuracy and f1
+            probas = torch.softmax(voutputs / temperature, -1)
+            pred = torch.multinomial(probas, 1).item()
+            gt = vlabels.item()
+
+            predictions.append(pred)
+            ground_truths.append(gt)
+
+
     avg_vloss = running_vloss / len(val_dl)
+    accuracy = metrics.accuracy_score(ground_truths, predictions)
+    f1 = metrics.f1_score(ground_truths, predictions, average="weighted")
+
     print(f"loss = {avg_vloss :.4f}")
+    print(f"accuracy = {accuracy :.4f}")
+    print(f"f1 = {f1 :.4f}")
+    
+    return avg_vloss, accuracy, f1
+
+    
