@@ -82,10 +82,9 @@ def evaluate(model : torch.nn.Module, val_dl : DataLoader, weights = None):
 
             # Apply a weighting to the outputs based on prior knowledge
             probas = torch.softmax(voutputs / 0.2, -1)
-            probas = torch.mul(probas, INV_WEIGHTS)
+            probas = torch.mul(probas, WEIGHTS)
             pred = torch.multinomial(probas, 1)
 
-            pred = torch.argmax(probas)
             pred = pred.item()
             gt = vlabels.item()
 
