@@ -3,18 +3,23 @@ import torch.nn as nn
 import torch
 
 class LSTMNetwork(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, output_size, dropout_prob = 0.5, device = "cuda"):
+    def __init__(self, embed_dim, hidden_size, num_layers, output_size, dropout_prob = 0.5, device = "cuda"):
         super().__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
 
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.embedding = nn.Embedding(255, embed_dim, ord('\n'))
+        self.lstm = nn.LSTM(embed_dim, hidden_size, num_layers, batch_first=True)
         self.dropout = nn.Dropout(dropout_prob)
         self.fc = nn.Linear(hidden_size, output_size)
+        
         self.device = device
         self.to(device)
 
     def forward(self, x):
+        x = x.to(self.device)
+        x = self.embedding(x)
+
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)
         c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)
 
@@ -25,4 +30,5 @@ class LSTMNetwork(nn.Module):
 
         # Index hidden state of the last time step
         out = self.fc(out[:, -1, :])
+        x = x.to("cpu")
         return out

@@ -21,12 +21,13 @@ class CharacterTok:
         return token_matrix
 
 class CharTokenDataset(Dataset):
-    def __init__(self, data, labels, tokenizer, max_seq_length, normalize = True):
+    def __init__(self, data, labels, tokenizer, max_seq_length, normalize = True, dtype = torch.float32):
         self.data = data
         self.labels = labels
         self.tokenizer = tokenizer
         self.max_seq_length = max_seq_length
         self.normalize = normalize
+        self.dtype = dtype
 
     def __len__(self):
         return len(self.data)
@@ -48,6 +49,6 @@ class CharTokenDataset(Dataset):
         token_ids = [ord(char) / c  for char in tokens]
 
         label = self.labels.iloc[idx]  
-        return torch.tensor(token_ids, dtype=torch.float32), label
+        return torch.tensor(token_ids, dtype=self.dtype), label
     
 

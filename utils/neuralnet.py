@@ -3,10 +3,12 @@ import torch.nn as nn
 import torch
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, input_features, hidden_layers, output_classes, dropout = True):
+    def __init__(self, input_features, hidden_layers, output_classes, dropout = True, device = "cuda"):
         super().__init__()
 
         self.initialize_layers(input_features, hidden_layers, output_classes, dropout)
+        self.device = device
+        self.to(device)
 
         
     def initialize_layers(self, input_features, hidden_layers, output_classes, dropout):
@@ -35,4 +37,7 @@ class NeuralNetwork(nn.Module):
 
 
     def forward(self, x):
-        return self.input_layer(x)
+        x = x.to(self.device)
+        y =  self.input_layer(x)
+        x = x.to("cpu")
+        return y

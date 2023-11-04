@@ -17,6 +17,7 @@ def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimiz
 
         optimizer.zero_grad()
         outputs = model(inputs)
+        outputs = outputs.to("cpu")
 
         # Compute the loss and its gradients
         loss = loss_fn(outputs, labels)
@@ -47,6 +48,7 @@ def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataL
             for i, vdata in enumerate(val_dl):
                 vinputs, vlabels = vdata
                 voutputs = model(vinputs)
+                voutputs = voutputs.to("cpu")
                 vloss = loss_fn(voutputs, vlabels)
                 running_vloss += vloss
 
@@ -68,6 +70,7 @@ def evaluate(model : torch.nn.Module, val_dl : DataLoader):
         for i, vdata in enumerate(val_dl):
             vinputs, vlabels = vdata
             voutputs = model(vinputs)
+            voutputs = voutputs.to("cpu")
             vloss = loss_fn(voutputs, vlabels)
             running_vloss += vloss
 
