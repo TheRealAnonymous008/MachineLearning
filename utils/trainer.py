@@ -5,6 +5,9 @@ import torch.functional as F
 import torch
 from sklearn import metrics
 
+INV_WEIGHTS = torch.tensor([0.00287505, 0.00246512, 0.01015641, 0.00615233, 0.00702346, 0.02318034])
+WEIGHTS = torch.tensor([0.34782, 0.40566, 0.09846, 0.16254, 0.14238, 0.04314])
+
 def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimizer, loss_fn ):
     running_loss = 0.
     last_loss = 0.
@@ -32,9 +35,9 @@ def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimiz
 
     return last_loss
 
-def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataLoader, epochs = 1, learning_rate = 0.01):
-    optimizer = Adam(params=model.parameters(True), lr=learning_rate, betas=[0.9, 0.999])
-    loss_fn = CrossEntropyLoss()
+def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataLoader, epochs = 1, learning_rate = 0.0, weights = None):
+    optimizer = Adam(params=model.parameters(True), lr=learning_rate, betas=[0.9, 0.999], maximize=False)
+    loss_fn = CrossEntropyLoss(weight= weights)
     for epoch in range(1, epochs + 1):
         print(f"Epoch {epoch}")
 
@@ -55,8 +58,8 @@ def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataL
         avg_vloss = running_vloss / len(val_dl)
         print(f"train_loss = {train_loss :.4f}, val_loss = {avg_vloss :.4f}")
 
-def evaluate(model : torch.nn.Module, val_dl : DataLoader):
-    loss_fn = CrossEntropyLoss()
+def evaluate(model : torch.nn.Module, val_dl : DataLoader, weights = None):
+    loss_fn = CrossEntropyLoss(weight = weights)
     model.eval()
     running_vloss = 0
     temperature = 0.01 # Controls softmax preds
@@ -76,8 +79,14 @@ def evaluate(model : torch.nn.Module, val_dl : DataLoader):
 
             # Use the outputs to get a decision rule via softmax. This is done to get a tangible result for 
             # Accuracy and f1
-            probas = torch.softmax(voutputs / temperature, -1)
-            pred = torch.multinomial(probas, 1).item()
+
+            # Apply a weighting to the outputs based on prior knowledge
+            probas = torch.softmax(voutputs / 0.2, -1)
+            probas = torch.mul(probas, INV_WEIGHTS)
+            pred = torch.multinomial(probas, 1)
+
+            pred = torch.argmax(probas)
+            pred = pred.item()
             gt = vlabels.item()
 
             predictions.append(pred)
@@ -87,11 +96,12 @@ def evaluate(model : torch.nn.Module, val_dl : DataLoader):
     avg_vloss = running_vloss / len(val_dl)
     accuracy = metrics.accuracy_score(ground_truths, predictions)
     f1 = metrics.f1_score(ground_truths, predictions, average="weighted")
+    confusion = metrics.confusion_matrix(ground_truths, predictions)
 
     print(f"loss = {avg_vloss :.4f}")
     print(f"accuracy = {accuracy :.4f}")
     print(f"f1 = {f1 :.4f}")
     
-    return avg_vloss, accuracy, f1
+    return avg_vloss, accuracy, f1, confusion
 
     

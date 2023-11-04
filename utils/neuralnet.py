@@ -38,6 +38,6 @@ class NeuralNetwork(nn.Module):
 
     def forward(self, x):
         x = x.to(self.device)
-        y =  self.input_layer(x)
+        y =  self.forward_layers(x)
         x = x.to("cpu")
         return y
