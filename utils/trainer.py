@@ -95,7 +95,7 @@ def evaluate(model : torch.nn.Module, val_dl : DataLoader, weights = None):
     avg_vloss = running_vloss / len(val_dl)
     accuracy = metrics.accuracy_score(ground_truths, predictions)
     f1 = metrics.f1_score(ground_truths, predictions, average="weighted")
-    confusion = metrics.confusion_matrix(ground_truths, predictions)
+    confusion = metrics.confusion_matrix(ground_truths, predictions, normalize="pred")
 
     print(f"loss = {avg_vloss :.4f}")
     print(f"accuracy = {accuracy :.4f}")
