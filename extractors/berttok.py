@@ -17,6 +17,8 @@ class BertTokenizer:
             inputs = self.tokenizer.encode(sentence, return_tensors="pt")
             outputs = self.model(inputs)
             output = outputs.logits[:, -1, :].view(-1)
-            encoded_outputs.append(output)
+
+            encoded_outputs.append(output.detach().numpy())
+            del inputs
 
         return np.array(encoded_outputs)
