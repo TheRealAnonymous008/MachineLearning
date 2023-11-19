@@ -16,7 +16,7 @@ class LSTMNetwork(nn.Module):
         self.device = device
         self.to(device)
 
-    def forward(self, x):
+    def forward(self, x, last_pad):
         x = x.to(self.device)
         x = self.embedding(x)
 
@@ -30,7 +30,7 @@ class LSTMNetwork(nn.Module):
 
 
         # Index hidden state of the last time step
-        out = out[:, -1, :]
+        out = out[:, last_pad, :][0]
         out = self.fc(out)
         x = x.to("cpu")
         return out

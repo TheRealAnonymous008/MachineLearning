@@ -58,7 +58,7 @@ class TransformerEncoder(nn.Module):
         encoded = self.encoder.forward(embedded)
         encoded = encoded.permute(1, 0, 2) 
 
-        y = self.fc(encoded[-1, :, :])
+        y = self.fc(encoded[last_pad, :, :][0])
         x = x.to("cpu")
 
         return y
