@@ -39,7 +39,7 @@ def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimiz
 
     return last_loss
 
-def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataLoader, epochs = 1, learning_rate = 0.0, weights = None, path = "", tol = 0.2, min_epoch = 200, is_seq = False):
+def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataLoader, epochs = 1, learning_rate = 0.0, weights = None, path = "", tol = 0.2, min_epoch = 50, is_seq = False):
     optimizer = Adam(params=model.parameters(True), lr=learning_rate, betas=[0.9, 0.999], maximize=False)
     loss_fn = CrossEntropyLoss(weight= weights)
     for epoch in range(1, epochs + 1):
