@@ -46,7 +46,7 @@ class CharTokenDataset(Dataset):
         if self.normalize:
             c = 255.0
 
-        token_ids = [ord(char) / c  for char in tokens]
+        token_ids = [ord(char)  for char in tokens]
 
         label = self.labels.iloc[idx]  
         return torch.tensor(token_ids, dtype=self.dtype), label
