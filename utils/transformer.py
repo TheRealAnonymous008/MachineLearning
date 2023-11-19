@@ -50,14 +50,15 @@ class TransformerEncoder(nn.Module):
         self.device = device
         self.to(device)
 
-    def forward(self, x):
+    def forward(self, x, last_pad = -1):
         x = x.to(self.device)
         embedded = self.embedding(x) 
         embedded = self.positional_encoding(embedded)
-        encoded = self.encoder(embedded)
+        
+        encoded = self.encoder.forward(embedded)
         encoded = encoded.permute(1, 0, 2) 
 
         y = self.fc(encoded[-1, :, :])
-
         x = x.to("cpu")
+
         return y

@@ -36,19 +36,16 @@ class CharTokenDataset(Dataset):
         text = self.data['text'].iloc[idx]
         # Tokenize the text by characters
         tokens = list(text)
+        length = len(tokens)
         # Pad or truncate the tokens to the specified max_seq_length
         if len(tokens) < self.max_seq_length:
             tokens += ["\n"] * (self.max_seq_length - len(tokens))
         else:
             tokens = tokens[:self.max_seq_length]
-        # Convert tokens to numerical representations (e.g., ASCII values).  
-        c = 1.0 
-        if self.normalize:
-            c = 255.0
 
         token_ids = [ord(char)  for char in tokens]
 
         label = self.labels.iloc[idx]  
-        return torch.tensor(token_ids, dtype=self.dtype), label
+        return torch.tensor(token_ids, dtype=self.dtype), label, length
     
 

@@ -28,6 +28,7 @@ class LSTMNetwork(nn.Module):
         # Apply dropout
         out = self.dropout(out)
 
+
         # Index hidden state of the last time step
         out = out[:, -1, :]
         out = self.fc(out)

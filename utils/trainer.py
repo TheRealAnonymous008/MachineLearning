@@ -8,7 +8,7 @@ from sklearn import metrics
 INV_WEIGHTS = torch.tensor([0.00287505, 0.00246512, 0.01015641, 0.00615233, 0.00702346, 0.02318034])
 WEIGHTS = torch.tensor([0.34782, 0.40566, 0.09846, 0.16254, 0.14238, 0.04314])
 
-def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimizer, loss_fn ):
+def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimizer, loss_fn, is_seq = False ):
     running_loss = 0.
     last_loss = 0.
 
@@ -16,10 +16,14 @@ def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimiz
     # iter(training_loader) so that we can track the batch
     # index and do some intra-epoch reporting
     for i, data in enumerate(dl):
-        inputs, labels = data
+        inputs, labels, attn = data
 
         optimizer.zero_grad()
-        outputs = model(inputs)
+        if not is_seq:
+            outputs = model(inputs)
+        else:
+            outputs = model(inputs, attn)
+
         outputs = outputs.to("cpu")
 
         # Compute the loss and its gradients
@@ -35,22 +39,26 @@ def train_one_epoch(model: torch.nn.modules, dl: DataLoader, optimizer : Optimiz
 
     return last_loss
 
-def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataLoader, epochs = 1, learning_rate = 0.0, weights = None, path = "", tol = 0.2, min_epoch = 100):
+def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataLoader, epochs = 1, learning_rate = 0.0, weights = None, path = "", tol = 0.2, min_epoch = 200, is_seq = False):
     optimizer = Adam(params=model.parameters(True), lr=learning_rate, betas=[0.9, 0.999], maximize=False)
     loss_fn = CrossEntropyLoss(weight= weights)
     for epoch in range(1, epochs + 1):
         print(f"Epoch {epoch}")
 
         model.train()
-        train_loss = train_one_epoch(model, train_dl, optimizer, loss_fn)
+        train_loss = train_one_epoch(model, train_dl, optimizer, loss_fn, is_seq)
 
         model.eval()
         running_vloss = 0
         # Disable gradient computation and reduce memory consumption.
         with torch.no_grad():
             for i, vdata in enumerate(val_dl):
-                vinputs, vlabels = vdata
-                voutputs = model(vinputs)
+                vinputs, vlabels, attn = vdata
+                if is_seq:
+                    voutputs = model.forward(vinputs, attn)
+                else:
+                    voutputs = model(vinputs)
+
                 voutputs = voutputs.to("cpu")
                 vloss = loss_fn(voutputs, vlabels)
                 running_vloss += vloss
@@ -64,7 +72,7 @@ def training_loop(model : torch.nn.Module, train_dl : DataLoader, val_dl : DataL
         if avg_vloss - train_loss < tol and epoch > min_epoch:
             return 
 
-def evaluate(model : torch.nn.Module, val_dl : DataLoader, weights = None):
+def evaluate(model : torch.nn.Module, val_dl : DataLoader, weights = None, is_seq = False):
     loss_fn = CrossEntropyLoss(weight = weights)
     model.eval()
     running_vloss = 0
@@ -77,8 +85,12 @@ def evaluate(model : torch.nn.Module, val_dl : DataLoader, weights = None):
 
     with torch.no_grad():
         for i, vdata in enumerate(val_dl):
-            vinputs, vlabels = vdata
-            voutputs = model(vinputs)
+            vinputs, vlabels, attn = vdata
+            if is_seq:
+                voutputs = model.forward(vinputs, attn)
+            else:
+                voutputs = model(vinputs)
+                
             voutputs = voutputs.to("cpu")
             vloss = loss_fn(voutputs, vlabels)
             running_vloss += vloss
