@@ -10,7 +10,7 @@ def forward_select(model, X, y, k):
 
 def forward_select_and_fit(model, X_train, Y_train, k, X_test, Y_test):
     model = clone(model)
-    _, Xt = forward_select(model, X_train, Y_train, k)
+    features, Xt = forward_select(model, X_train, Y_train, k)
     model.fit(Xt, Y_train)
 
-    # TODO: Run tests here
+    return model, features, Xt
